@@ -1,0 +1,10 @@
+.vs/
+*.meta
+*.mat
+HowToMakeVideoGame/Assets/PlayerScripts
+HowToMakeVideoGame/Assets/Scenes
+HowToMakeVideoGame/Library
+HowToMakeVideoGame/Logs
+HowToMakeVideoGame/Packages
+HowToMakeVideoGame/ProjectSettings
+HowToMakeVideoGame/UserSettings

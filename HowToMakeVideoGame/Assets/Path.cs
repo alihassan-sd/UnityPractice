@@ -36,9 +36,8 @@ public class Path
 
     public Vector2[] GetPointsInSegment(int i) // First segment is at index '0' so will need to multiply by pointsInSegment-1
     {
-
-        //Vector2 singlePoint = new Vector2(-1, 0);
         Vector2[] pointsToReturn = new Vector2[pointsInSegment];// { singlePoint, singlePoint, singlePoint, singlePoint};
+        
         for (int j = 0; j < pointsInSegment; j++)
         {
             if (j == 3)
@@ -100,17 +99,14 @@ public class Path
             }
         }
         else if (i % 3 != 0 && i != points.Count - 2 && i != 1) //Moving Control point
-        //else if (i % 3 != 0 && i != 1 || isClosed) //Moving Control point
         {
             if ((i + 1) % 3 == 0) //Moving Control Point previous to anchor point
             {
-                //points[i + 1] = points[i + 1] + newPos - points[i];
                 points[i + 2] = points[i + 2] - (newPos - points[i]);
                 points[i] = newPos;
             }
             else //Moving Control Point next to anchor point
             {
-                //points[i - 1] = points[i - 1] + newPos - points[i];
                 points[i - 2] = points[i - 2] - (newPos - points[i]);
                 points[i] = newPos;
             }
@@ -122,13 +118,12 @@ public class Path
             {
                 points[i] = newPos;
             }
-            else
+            else //If it is closed, just move previous control point with it
             {
                 points[i-2] = points[i-2] - (newPos - points[i]);
                 points[i] = newPos;
             }
         }
-
     }
 
     public void ToggleClosed()
@@ -144,9 +139,43 @@ public class Path
             points.RemoveRange(points.Count - 2, 2);
         }
     }
-    /*
+    
+    public void DeleteSegment(int i)
+    {
+        if (NumPoints > 4)
+        {
+            if (i == 0)
+            {
+                if (!isClosed)
+                {
+                    points.RemoveRange(0, 2 + 1);
+                }
+                else
+                {
+                    points[points.Count - 1] = points[2];
+                    points.RemoveRange(0, 2 + 1);
+                }
+            }
+
+            else if (i == points.Count - 1 && !isClosed)
+            {
+                points.RemoveRange(i - 2, 3);
+            }
+
+            else
+            {
+                points.RemoveRange(i - 1, 3);
+            }
+        }
+    }
+
+    public void SplitSegment (Vector2 newAnchorPos, int i)
+    {
+        points.InsertRange(i * 3 + 2, new Vector2[] { Vector2.zero, newAnchorPos, Vector2.zero });
+    }
+
     int LoopIndex (int i)
     {
         return (i + points.Count) % points.Count;
-    }*/
+    }
 }

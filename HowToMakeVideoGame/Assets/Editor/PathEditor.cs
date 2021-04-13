@@ -8,7 +8,7 @@ public class PathEditor : Editor
 {
     PathCreator pathCreator;
     Path path;
-
+    int currentSegment = -1;
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -39,8 +39,61 @@ public class PathEditor : Editor
         Vector2 mousePos = HandleUtility.GUIPointToWorldRay(guiEvent.mousePosition).origin;
         if (guiEvent.type == EventType.MouseDown && guiEvent.button == 1 && guiEvent.shift)
         {
-            Undo.RecordObject(pathCreator, "Add Segment");
-            path.AddSegment(mousePos);
+            if (currentSegment != -1)
+            {
+                Undo.RecordObject(pathCreator, "Spliting Segment");
+                path.SplitSegment(mousePos, currentSegment);
+            }
+            else if (!path.isClosed)
+            {
+                Undo.RecordObject(pathCreator, "Add Segment");
+                path.AddSegment(mousePos);
+            }
+            
+        }
+        if (guiEvent.type == EventType.MouseDown && guiEvent.button == 1 && guiEvent.control)
+        {
+            Undo.RecordObject(pathCreator, "Deleting Segment");
+            int j = 0;
+            
+            for (j = 0; j < path.NumPoints; j++)
+            {
+                
+                if (Vector2.Distance(mousePos, path[j]) <= 0.5f)
+                {
+                    //j = 5;
+                    path.DeleteSegment(j);
+                }
+            }
+            
+        }
+        //guiEvent.type == EventType.MouseMove && 
+        if (guiEvent.type == EventType.MouseMove && guiEvent.button == 1 && guiEvent.control && guiEvent.shift)
+        {
+            int j = 0;
+            int newSegment = -1;
+
+            for (j = 0; j < path.NumSegments; j++)
+            {
+                Vector2[] points = path.GetPointsInSegment(j);
+                float distance = HandleUtility.DistancePointBezier(mousePos, points[0], points[3], points[1], points[2]);
+                if (distance <= 0.5f)
+                {
+                    //j = 5;
+                    path.SplitSegment(mousePos, j);
+                    newSegment = j;
+                }
+            }
+            if(newSegment != currentSegment)
+            {
+                currentSegment = newSegment;
+                HandleUtility.Repaint();
+            }
+            if (currentSegment != -1)
+            {
+                Undo.RecordObject(pathCreator, "Spliting Segment");
+                path.SplitSegment(mousePos, currentSegment);
+            }
         }
     }
 
@@ -53,7 +106,8 @@ public class PathEditor : Editor
             Handles.color = Color.blue;
             Handles.DrawLine(points[1], points[0]);
             Handles.DrawLine(points[2], points[3]);
-            Handles.DrawBezier(points[0], points[3], points[1], points[2], Color.green, null, 2);
+            Color segmentColor = (i == currentSegment && Event.current.shift) ? Color.red : Color.green;
+            Handles.DrawBezier(points[0], points[3], points[1], points[2], segmentColor, null, 2);
             
         }
 

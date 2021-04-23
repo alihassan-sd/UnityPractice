@@ -14,7 +14,6 @@ public class Selection : MonoBehaviour
     [SerializeField]
     private Material selectedmaterial;
     private GameObject[] gameObject1;
-
     LineRenderer lineRenderer;
     Vector2 myVector;
     Path path;
@@ -68,6 +67,7 @@ public class Selection : MonoBehaviour
     }
     private void Update()
     {
+        
         //camera = GameObject.FindGameObjectsWithTag("MainCamera");
         //ray= new { };
         //var ray = new Ray();
@@ -111,14 +111,17 @@ public class Selection : MonoBehaviour
                 selectionRenderer1.material = previousMaterial;*/
             }
         }
-        lineRenderer = GetComponent<LineRenderer>();
-        lengthOfLineRenderer = path.NumPoints;
-        lineRenderer.positionCount = lengthOfLineRenderer;
+
+        //lineRenderer = GetComponent<LineRenderer>();
+        //lengthOfLineRenderer = path.NumPoints;
+        //lineRenderer.positionCount = lengthOfLineRenderer;
+        /*
         for (int i = 0; i < path.NumPoints; i++)
         {
             //lineRenderer.SetPosition(i, new Vector3(i * 0.5f, Mathf.Sin(i + t), 0.0f));
             lineRenderer.SetPosition(i, path.points[i]);
-        }
+        }*/
+        DrawCubicCurve(path.points[0], path.points[1], path.points[2], path.points[3]);
         if (Input.GetMouseButton(0))
         {
             //Debug.Log("Inside Mouse Down from Update");
@@ -126,14 +129,36 @@ public class Selection : MonoBehaviour
             //transform.Position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             screenSpace = Camera.main.WorldToScreenPoint(transform.position);
             Vector3 ins = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenSpace.z);
-            offset = Camera.main.transform.position - Camera.main.ScreenToWorldPoint(ins);
+            offset = Camera.main.ScreenToWorldPoint(ins) - Camera.main.transform.position;
             Debug.Log(offset);
 
             if (Physics.Raycast(ray, out hit))
             {
+                var prevPoint = new Vector2(0, 0);
+                int j = 0;
                 GameObject selection = hit.collider.gameObject;
-                
-                selection.transform.position = -offset;
+                for (int i = 0; i < path.NumPoints; i++)
+                {
+                    if (selection.transform.position.x == path.points[i].x && selection.transform.position.y == path.points[i].y)
+                    {
+                        j = i;
+                    }
+                }
+                selection.transform.position = offset;
+                prevPoint = path.points[j];
+                path.points[j] = new Vector2(selection.transform.position.x, selection.transform.position.y);
+                if(j/3 == 1 && j!=0)
+                {
+                    path.points[j - 1] = path.points[j - 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
+                    GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
+                    controlPoint[j-1].transform.position = path.points[j-1];
+                }
+                else if (j == 0)
+                {
+                    path.points[j + 1] = path.points[j + 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
+                    GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
+                    controlPoint[j + 1].transform.position = path.points[j + 1];
+                }
 
             }
             
@@ -192,4 +217,25 @@ public class Selection : MonoBehaviour
         }*/
     }
 
+    public void MoveAnchorPoint(Vector2 newPos)
+    {
+        
+    }
+
+    void DrawCubicCurve(Vector3 point0, Vector3 point1, Vector3 point2, Vector3 point3)
+    {
+
+        lineRenderer.positionCount = 100;
+        float s = 0f;
+        Vector3 X = new Vector3(0, 0, 0);
+        for (int i = 0; i < lineRenderer.positionCount; i++)
+        {
+            X = (1 - s) * (1 - s) * (1 - s) * point0 + 3 * (1 - s) * (1 - s) * s * point1 + 3 * (1 - s) * s * s * point2 + s * s * s * point3;
+
+            lineRenderer.SetPosition(i, X);
+            s += (1 / (float)lineRenderer.positionCount);
+        }
+    }
+
 }
+

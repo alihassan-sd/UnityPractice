@@ -19,7 +19,7 @@ public class Selection : MonoBehaviour
     Path path;
     Vector3 screenSpace;
     Vector3 offset;
-    int anchorIndex = 0;
+    int anchorIndex = 3;
     float width = 1.0f;
     float anchorRadius = .05f;
     public int lengthOfLineRenderer;
@@ -62,7 +62,8 @@ public class Selection : MonoBehaviour
             Debug.Log("Path value = " + path[i]);
 
         }
-        
+        DrawCubicCurve(path.points[0], path.points[1], path.points[2], path.points[3]);
+
 
     }
     private void Update()
@@ -121,7 +122,8 @@ public class Selection : MonoBehaviour
             //lineRenderer.SetPosition(i, new Vector3(i * 0.5f, Mathf.Sin(i + t), 0.0f));
             lineRenderer.SetPosition(i, path.points[i]);
         }*/
-        DrawCubicCurve(path.points[0], path.points[1], path.points[2], path.points[3]);
+        
+        
         if (Input.GetMouseButton(0))
         {
             //Debug.Log("Inside Mouse Down from Update");
@@ -145,23 +147,35 @@ public class Selection : MonoBehaviour
                     }
                 }
                 selection.transform.position = offset;
+
                 prevPoint = path.points[j];
                 path.points[j] = new Vector2(selection.transform.position.x, selection.transform.position.y);
-                if(j/3 == 1 && j!=0)
+                if(j%3 == 0 && j!=0)
                 {
                     path.points[j - 1] = path.points[j - 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
                     GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
                     controlPoint[j-1].transform.position = path.points[j-1];
+                    DrawCubicCurve(path.points[j - 3], path.points[j - 2], path.points[j - 1], path.points[j]);
                 }
                 else if (j == 0)
                 {
                     path.points[j + 1] = path.points[j + 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
                     GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
                     controlPoint[j + 1].transform.position = path.points[j + 1];
+                    DrawCubicCurve(path.points[j], path.points[j + 1], path.points[j + 2], path.points[j + 3]);
+                }
+                else if ((j+1)%3==0)
+                {
+                    DrawCubicCurve(path.points[j - 2], path.points[j - 1], path.points[j], path.points[j + 1]);
+                }
+                else if ((j + 2) % 3 == 0)
+                {
+                    DrawCubicCurve(path.points[j - 1], path.points[j], path.points[j + 1], path.points[j + 2]);
                 }
 
+
             }
-            
+
         }
         else if (Input.GetMouseButtonDown(1) && !Input.GetMouseButton(0))
         {
@@ -184,7 +198,7 @@ public class Selection : MonoBehaviour
                 //lineRenderer.SetPosition(i, new Vector3(i * 0.5f, Mathf.Sin(i + t), 0.0f));
                 lineRenderer.SetPosition(i, path.points[i]);
             }
-            anchorIndex++;
+            
         }
         
     }
@@ -215,6 +229,7 @@ public class Selection : MonoBehaviour
         {
             DrawLine(anchorIndex, anchorIndex + 1);
         }*/
+        anchorIndex += 3;
     }
 
     public void MoveAnchorPoint(Vector2 newPos)

@@ -10,8 +10,8 @@ public class Path : MonoBehaviour
     [SerializeField, HideInInspector]
     public bool isClosed = false;
     public GameObject gameObject;
-    public float pointDistance = 5f;
-    public float half = 0.5f;
+    private float pointDistance = 5f;
+    private float half = 0.5f;
     public int pointsInSegment = 4;
     public Path(Vector2 centre)
     {

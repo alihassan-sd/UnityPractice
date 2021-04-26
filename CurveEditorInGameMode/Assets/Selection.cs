@@ -1,7 +1,9 @@
-﻿
-//using System.Collections;
-//using System.Collections.Generic;
+﻿using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+//using CodeMonkey;
+//using CodeMoney.Utils;
 
 public class Selection : MonoBehaviour
 {
@@ -23,6 +25,10 @@ public class Selection : MonoBehaviour
     float width = 1.0f;
     float anchorRadius = .05f;
     public int lengthOfLineRenderer;
+
+    [SerializeField] private GameObject saveGameObject;
+    //private IUnit save;
+
     void Awake()
     {
         myVector = new Vector2(0, 0);
@@ -45,7 +51,7 @@ public class Selection : MonoBehaviour
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.widthMultiplier = 0.2f;
-        
+
 
         //Drawing 4 points in game mode
         for (int i = 0; i < path.NumPoints; i++)
@@ -60,12 +66,17 @@ public class Selection : MonoBehaviour
             Debug.Log("Num of Points = " + path.NumPoints);
             DrawPathPoints(path[i]);
             Debug.Log("Path value = " + path[i]);
-
+            
         }
-        DrawCubicCurve(path.points[0], path.points[1], path.points[2], path.points[3]);
+        string json1 = JsonUtility.ToJson(path);
+        Debug.Log(json1);
+        File.WriteAllText("/save.json", json1);
+        //CMDebug.TextPopupMouse("Saved!");
+        //DrawCubicCurve(path.points[0], path.points[1], path.points[2], path.points[3]);
 
 
     }
+
     private void Update()
     {
         
@@ -152,25 +163,36 @@ public class Selection : MonoBehaviour
                 path.points[j] = new Vector2(selection.transform.position.x, selection.transform.position.y);
                 if(j%3 == 0 && j!=0)
                 {
-                    path.points[j - 1] = path.points[j - 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
-                    GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
-                    controlPoint[j-1].transform.position = path.points[j-1];
-                    DrawCubicCurve(path.points[j - 3], path.points[j - 2], path.points[j - 1], path.points[j]);
+                    if (j < path.NumPoints - 1)
+                    {
+                        path.points[j - 1] = path.points[j - 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
+                        path.points[j + 1] = path.points[j + 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
+                        GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
+                        controlPoint[j - 1].transform.position = path.points[j - 1];
+                        controlPoint[j + 1].transform.position = path.points[j + 1];
+                    }
+                    else
+                    {
+                        path.points[j - 1] = path.points[j - 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
+                        GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
+                        controlPoint[j - 1].transform.position = path.points[j - 1];
+                    }
+                    //DrawCubicCurve(path.points[j - 3], path.points[j - 2], path.points[j - 1], path.points[j]);
                 }
                 else if (j == 0)
                 {
                     path.points[j + 1] = path.points[j + 1] - (prevPoint - path.points[j]); //(path.points[j] - path.points[j-1]); //path.points[j] + 
                     GameObject[] controlPoint = GameObject.FindGameObjectsWithTag("anchor");
                     controlPoint[j + 1].transform.position = path.points[j + 1];
-                    DrawCubicCurve(path.points[j], path.points[j + 1], path.points[j + 2], path.points[j + 3]);
+                    //DrawCubicCurve(path.points[j], path.points[j + 1], path.points[j + 2], path.points[j + 3]);
                 }
                 else if ((j+1)%3==0)
                 {
-                    DrawCubicCurve(path.points[j - 2], path.points[j - 1], path.points[j], path.points[j + 1]);
+                    //DrawCubicCurve(path.points[j - 2], path.points[j - 1], path.points[j], path.points[j + 1]);
                 }
                 else if ((j + 2) % 3 == 0)
                 {
-                    DrawCubicCurve(path.points[j - 1], path.points[j], path.points[j + 1], path.points[j + 2]);
+                    //DrawCubicCurve(path.points[j - 1], path.points[j], path.points[j + 1], path.points[j + 2]);
                 }
 
 
@@ -187,20 +209,26 @@ public class Selection : MonoBehaviour
             Debug.Log(offset);
             path.AddSegment(new Vector2(offset.x, offset.y));
             //Debug.Log(path.NumSegments);
-            DrawPathPoints(new Vector2(offset.x, offset.y));
+            //DrawPathPoints(new Vector2(offset.x, offset.y));
+            DrawPathPoints(path[path.NumPoints - 3]);
+            DrawPathPoints(path[path.NumPoints -2]);
+            DrawPathPoints(path[path.NumPoints -1]);
+            Debug.Log("Anchor index = " + anchorIndex);
+            //DrawCubicCurve(path.points[path.NumPoints - 4], path.points[path.NumPoints - 3], path.points[path.NumPoints - 2], path.points[path.NumPoints - 1]);
             //Vector3[3] positions = new Vector3[3](offset, offset + 1, offset + 2);
-            LineRenderer lineRenderer = GetComponent<LineRenderer>();
-            var t = Time.time;
-            lengthOfLineRenderer = path.NumPoints;
-            lineRenderer.positionCount = lengthOfLineRenderer;
-            for (int i = 0; i < path.NumPoints; i++)
-            {
-                //lineRenderer.SetPosition(i, new Vector3(i * 0.5f, Mathf.Sin(i + t), 0.0f));
-                lineRenderer.SetPosition(i, path.points[i]);
-            }
+            
             
         }
+        Debug.Log("Num points = " + path.NumPoints);
         
+        for (int i = 3; i <= path.NumPoints; i+=3)
+        {
+            //DrawCubicCurve(path.points[path.NumPoints - 4], path.points[path.NumPoints - 3], 
+              //path.points[path.NumPoints - 2], path.points[path.NumPoints - 1]);
+            DrawCubicCurve(path.points[i - 3], path.points[i - 2],
+                path.points[i - 1], path.points[i]);
+        }
+
     }
     public void DrawPathPoints(Vector2 myVect)
     {
@@ -230,6 +258,8 @@ public class Selection : MonoBehaviour
             DrawLine(anchorIndex, anchorIndex + 1);
         }*/
         anchorIndex += 3;
+
+      
     }
 
     public void MoveAnchorPoint(Vector2 newPos)
@@ -250,7 +280,12 @@ public class Selection : MonoBehaviour
             lineRenderer.SetPosition(i, X);
             s += (1 / (float)lineRenderer.positionCount);
         }
+        lineRenderer.enabled = true;
     }
 
+    private class SaveObject
+    {
+        public int goldAmount;
+    }
 }
 

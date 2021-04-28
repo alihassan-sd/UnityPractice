@@ -37,10 +37,16 @@ public class Selection : MonoBehaviour
             if (Physics.Raycast(ray, out hitInfo))
             {
                 selectedGO = hitInfo.transform.gameObject;
+                Debug.Log("Hitting");
             }
+            
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            selectedGO = null;
         }
 
-        if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(0))
         {
             if (selectedGO != null)
             {
